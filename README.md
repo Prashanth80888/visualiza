@@ -1,184 +1,206 @@
-# 🚀 AutoBiz AI – Smart Invoice Intelligence System
+# 🚀 AutoBiz AI – Intelligent Invoice Intelligence System
 
-## 🧠 Overview
-
-AutoBiz AI is an intelligent financial automation platform designed to help businesses manage invoices efficiently using AI and OCR.
-
-It extracts, verifies, analyzes, and generates insights from invoices to reduce manual effort, prevent errors, and improve financial decision-making.
+> Transforming invoice processing into smart financial decision-making using AI, OCR, and analytics.
 
 ---
 
-## 🎯 Problem Statement
+## 🌟 Project Highlights
 
-Small businesses face challenges such as:
+- 📄 OCR-based invoice data extraction  
+- 🤖 AI-powered email generation  
+- ✅ GST & tax verification engine  
+- ⚠ Fraud & anomaly detection system  
+- 📊 Analytics dashboard with insights  
+- 💬 Smart chatbot assistant (GhostTracker AI)  
+- 🔁 Fallback system for AI reliability  
+
+---
+
+## 🧠 Problem Statement
+
+Small businesses and finance teams face:
 
 - Manual invoice processing  
-- Delayed payments  
 - Tax calculation errors  
-- Lack of financial insights  
+- Delayed payments  
+- Lack of financial visibility  
 
 ---
 
 ## 💡 Solution
 
-AutoBiz AI automates invoice handling by:
+AutoBiz AI automates invoice workflows by:
 
-- 📄 Extracting invoice data using OCR  
-- 🤖 Using AI to understand and structure data  
-- ✅ Verifying GST & tax calculations  
-- 📊 Providing analytics dashboard  
-- 📧 Generating professional business emails  
-
----
-
-## 🔥 Key Features
-
-### 📄 Invoice OCR Processing
-- Upload PDF/Image invoices  
-- Extract key fields like:
-  - Invoice Number
-  - Date
-  - Customer
-  - Amount
-  - Tax
+- Extracting invoice data using OCR  
+- Structuring and validating financial data  
+- Detecting anomalies and tax mismatches  
+- Generating professional communication emails  
+- Providing analytics for decision-making  
 
 ---
 
-### 🧾 GST Verification Engine
-- Validates tax calculations  
-- Detects mismatches  
-- Ensures compliance  
+## 📸 Screenshots
+
+### 📊 Dashboard
+![Dashboard](./assets/dashboard.png)
 
 ---
 
-### ⚠️ Fraud Detection (Smart Logic)
-- Detects anomalies in invoices  
-- Flags suspicious transactions  
+### 📈 Analytics
+![Analytics](./assets/analytics.png)
 
 ---
 
-### 📊 Analytics Dashboard
-- Visual insights on:
-  - Spending trends  
-  - Invoice volume  
-  - Financial patterns  
+### 💬 AI Chatbot (GhostTracker)
+![Chatbot](./assets/chatbot.png)
 
 ---
 
-### 📧 AI Email Generator
-- Generates professional emails:
-  - Payment reminders  
-  - Invoice communication  
-- Includes fallback system if AI is unavailable  
+### 📄 Invoice Processing
+![Invoice](./assets/invoice.png)
 
 ---
 
 ## 🛠️ Tech Stack
 
 ### Frontend
-- React.js
-- Tailwind CSS
-- Framer Motion
+- React.js  
+- Tailwind CSS  
+- Framer Motion  
 
 ### Backend
-- Node.js
-- Express.js
+- Node.js  
+- Express.js  
 
 ### Database
-- MongoDB Atlas
+- MongoDB Atlas  
 
 ### APIs
-- OCR.Space API (Text Extraction)
-- Google Gemini AI (Email + AI Processing)
+- OCR.Space API  
+- Google Gemini AI  
 
 ---
 
-## 🧱 Architecture
-Client (React)
+## ⚙️ System Architecture
+
+Client (React UI)
 ↓
-Server (Node.js / Express)
+Node.js Server (API Layer)
 ↓
-OCR API → Extract Text
+OCR Engine → Extract Text
 ↓
-AI / Fallback Engine
+AI Engine / Fallback Logic
 ↓
 MongoDB (Storage)
 
 
----
 
-## 🚀 Deployment
-
-### 🌐 Frontend
-- Vercel
-
-### ⚙️ Backend
-- Render
-
-### 🗄️ Database
-- MongoDB Atlas
 
 ---
 
-## ⚠️ Reliability Design
+## 🔍 Key Features
+
+### 📄 Invoice OCR Engine
+- Upload invoice (PDF/Image)
+- Extract:
+  - Invoice number
+  - Customer
+  - Amount
+  - Tax
+
+---
+
+### ✅ GST Verification System
+- Validates tax calculations  
+- Detects mismatches  
+- Ensures financial accuracy  
+
+---
+
+### ⚠ Fraud Detection Logic
+- Flags suspicious invoices  
+- Detects inconsistencies  
+- Provides risk indication  
+
+---
+
+### 📧 AI Email Generator
+- Generates professional business emails  
+- Payment reminders & communication  
+- Includes fallback when AI is unavailable  
+
+---
+
+### 📊 Analytics Dashboard
+- Visual insights  
+- Financial trends  
+- Invoice tracking  
+
+---
+
+### 💬 GhostTracker AI Chatbot
+- Interactive assistant  
+- Helps understand invoice insights  
+- Enhances user experience  
+
+---
+
+## 🔁 Reliability & Robustness
 
 - Fallback system ensures:
-  - App works even if AI fails  
+  - App works even if AI APIs fail  
+- Error-handling for external APIs  
 - Smart regex-based extraction  
-- Error-handling for API failures  
 
 ---
 
-## 🧪 How to Run Locally
+## 🚀 How to Run Locally
 
 ### 1️⃣ Clone Repository
 
 ```bash
-git clone https://github.com/your-username/your-repo.git
-cd your-repo
+git clone https://github.com/Prashanth80888/visualiza.git
+cd visualiza
 
-2️⃣ Setup Backend
+
+2️⃣ Backend Setup
 cd server
 npm install
 
 
-Create .env file:
-
+Create .env:
 PORT=5000
-MONGO_URI=your_mongodb_uri
+MONGO_URI=your_mongodb_url
 OCR_API_KEY=your_ocr_key
 AI_API_KEY=your_gemini_key
 
-Run server:
 
+Run:
 npm run dev
 
-3️⃣ Setup Frontend
-
+3️⃣ Frontend Setup
 cd client
 npm install
 npm run dev
 
 
 🧠 Innovation Highlights
-AI + Rule-based hybrid system
+Hybrid AI + rule-based system
 Works even without AI (fallback logic)
-Real-world financial problem solving
+Real-world financial automation
 Scalable architecture
-
 
 🎯 Future Scope
 Payment gateway integration
-Automated invoice reminders
-Advanced fraud detection using ML
-Multi-user role-based system
-
+Automated reminders
+Advanced ML-based fraud detection
+Multi-user role management
 
 👨‍💻 Team
 Prashanth Gouda
-Teammate 1
-Teammate 2
+Team Members
 
 🏆 Conclusion
 
-AutoBiz AI transforms invoice management into an intelligent, automated, and reliable system, enabling businesses to make smarter financial decisions.
+AutoBiz AI is not just an invoice processor —
+it is a financial intelligence platform that enables smarter, faster, and more reliable business decisions.
