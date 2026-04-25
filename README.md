@@ -42,22 +42,22 @@ AutoBiz AI automates invoice workflows by:
 ## 📸 Screenshots
 
 ### 📊 Dashboard
-![Dashboard](./assets/dashboard.png)
+![Dashboard](./client/src/assets/dashboard.png)
 
 ---
 
 ### 📈 Analytics
-![Analytics](./assets/analytics.png)
+![Analytics](./client/src/assets/analytics.png)
 
 ---
 
 ### 💬 AI Chatbot (GhostTracker)
-![Chatbot](./assets/chatbot.png)
+![Chatbot](./client/src/assets/chatbot.png)
 
 ---
 
 ### 📄 Invoice Processing
-![Invoice](./assets/invoice.png)
+![Invoice](./client/src/assets/invoice.png)
 
 ---
 
@@ -82,7 +82,6 @@ AutoBiz AI automates invoice workflows by:
 ---
 
 ## ⚙️ System Architecture
-
 Client (React UI)
 ↓
 Node.js Server (API Layer)
@@ -92,8 +91,6 @@ OCR Engine → Extract Text
 AI Engine / Fallback Logic
 ↓
 MongoDB (Storage)
-
-
 
 
 ---
@@ -162,20 +159,17 @@ MongoDB (Storage)
 git clone https://github.com/Prashanth80888/visualiza.git
 cd visualiza
 
-
 2️⃣ Backend Setup
 cd server
 npm install
 
-
-Create .env:
+Create .env file:
 PORT=5000
 MONGO_URI=your_mongodb_url
 OCR_API_KEY=your_ocr_key
 AI_API_KEY=your_gemini_key
 
-
-Run:
+Run backend:
 npm run dev
 
 3️⃣ Frontend Setup
@@ -183,12 +177,11 @@ cd client
 npm install
 npm run dev
 
-
 🧠 Innovation Highlights
 Hybrid AI + rule-based system
 Works even without AI (fallback logic)
 Real-world financial automation
-Scalable architecture
+Scalable architec
 
 🎯 Future Scope
 Payment gateway integration
@@ -196,11 +189,15 @@ Automated reminders
 Advanced ML-based fraud detection
 Multi-user role management
 
+
 👨‍💻 Team
 Prashanth Gouda
-Team Members
+Nitin Makkittaya
+Jagannath Bhat
+Siddarth Patil
 
 🏆 Conclusion
 
 AutoBiz AI is not just an invoice processor —
 it is a financial intelligence platform that enables smarter, faster, and more reliable business decisions.
+
