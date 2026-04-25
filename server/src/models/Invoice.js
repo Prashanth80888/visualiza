@@ -1,28 +1,27 @@
 import mongoose from 'mongoose';
 
 const invoiceSchema = new mongoose.Schema({
-  vendor: { type: String, required: true },
-  amount: { type: Number, required: true }, // This is the FINAL TOTAL
+  vendor: { type: String, required: true, index: true }, // Added index for fast AI lookup
+  amount: { type: Number, required: true }, 
   reference: String,
   
-  // Invoice Date (when the bill was issued)
   date: { type: Date, default: Date.now }, 
-  
-  // --- NEW: PROCESSING DATE ---
-  // Tracks exactly when the AI scanned this invoice
   processingDate: { type: Date, default: Date.now },
-
-  // --- NEW: CATEGORY ---
-  // For the Insight-X analytics (Tech, Travel, Utilities, etc.)
   category: { type: String, default: 'Miscellaneous' },
   
-  // --- TAX & AUDIT INFO ---
+  // --- NEW: UNIT LEVEL INTELLIGENCE ---
+  // Essential for comparing market rates and negotiating price-per-item
+  items: [{
+    description: String,
+    quantity: { type: Number, default: 1 },
+    unitPrice: { type: Number, required: true }
+  }],
+
   taxId: String,
   subtotal: { type: Number, default: 0 }, 
   taxAmount: { type: Number, default: 0 },
   isVerified: { type: Boolean, default: false },
   
-  // --- TRACKING ---
   paymentStatus: { 
     type: String, 
     enum: ['Paid', 'Unpaid', 'Overdue'], 
@@ -30,15 +29,20 @@ const invoiceSchema = new mongoose.Schema({
   },
   dueDate: { type: Date }, 
   
+  // --- NEW: LOYALTY TRACKING ---
+  // If paidDate < dueDate, the AI uses this as "leverage" in negotiations
+  paidDate: { type: Date }, 
+
   status: { type: String, default: 'Pending' },
   
-  // Updated Shield to hold more specific AI intelligence
   shield: { 
     type: Object,
     default: {
       isDuplicate: false,
       riskLevel: 'Low',
-      aiConfidence: 'High'
+      aiConfidence: 'High',
+      // Added for the Negotiator
+      negotiationStrength: 'Calculated on Request' 
     }
   },
 

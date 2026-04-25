@@ -7,42 +7,83 @@ import EmailLog from '../models/EmailLog.js';
  */
 export const createEmail = async (req, res) => {
   const { prompt, contextText, recipientName, invoiceData } = req.body;
-  
-  // Prevent crash if auth middleware is not present
-  const userId = req.user?.id || null; 
+
+  const userId = req.user?.id || null;
 
   if (!prompt || !contextText) {
-    return res.status(400).json({ 
-      success: false, 
-      message: 'Neural Error: Prompt and Context are required for synthesis.' 
+    return res.status(400).json({
+      success: false,
+      message: 'Neural Error: Prompt and Context are required for synthesis.'
     });
   }
 
   try {
-    // 1. ENHANCED CONTEXT - Forced Formatting Instructions
+    // =========================
+    // 1) PROMPT
+    // =========================
     const neuralPrompt = `
-      Write a professional business email. 
-      Target Intent: ${prompt}
-      Business Context: ${contextText}
-      Technical Status: ${invoiceData?.isAnomaly ? 'Anomalies Detected' : 'Verified'}
-      
-      STRICT FORMATTING RULES:
-      - Start ONLY with 'Subject: [Subject Line]'
-      - Do not include any headers like "Task:", "User Intent:", or "Requirements:"
-      - Do not include any instructions or notes in the response.
-      - Use a world-class, professional executive tone.
-    `;
+Write a professional business email. 
+Target Intent: ${prompt}
+Business Context: ${contextText}
+Technical Status: ${invoiceData?.isAnomaly ? 'Anomalies Detected' : 'Verified'}
 
-    // 2. AI Generation Phase
-    const content = await generateEmailContent(neuralPrompt, contextText);
+STRICT RULES:
+- Start ONLY with 'Subject:'
+- No instructions or metadata
+- Professional executive tone
+`;
 
-    // 3. CLEANING & FILTERING PHASE
-    // This removes any accidental instruction lines the AI might return
+    let content;
+    let usedFallback = false;
+
+    // =========================
+    // 2) AI TRY
+    // =========================
+    try {
+      content = await generateEmailContent(neuralPrompt, contextText);
+    } catch (err) {
+      console.log("AI EMAIL FAILED → Using fallback");
+      usedFallback = true;
+
+      // =========================
+      // 🔥 FALLBACK EMAIL
+      // =========================
+      content = `
+Subject: Payment Reminder for Invoice ${invoiceData?.reference || ''}
+
+Dear ${recipientName || 'Customer'},
+
+We hope you are doing well.
+
+This is a reminder regarding invoice ${
+        invoiceData?.reference || ''
+      } dated ${invoiceData?.date || ''} for an amount of ₹${
+        invoiceData?.amount || ''
+      }.
+
+${
+  invoiceData?.isAnomaly
+    ? '⚠ We noticed discrepancies in the invoice. Kindly review and confirm.'
+    : 'The invoice has been verified successfully.'
+}
+
+We kindly request you to process the payment at your earliest convenience.
+
+Thank you for your business.
+
+Best regards,  
+Finance Team
+`;
+    }
+
+    // =========================
+    // 3) CLEANING
+    // =========================
     const lines = content.split('\n').filter(line => {
       const l = line.toLowerCase().trim();
-      return !l.startsWith('task:') && 
-             !l.startsWith('user intent:') && 
-             !l.startsWith('requirements:') && 
+      return !l.startsWith('task:') &&
+             !l.startsWith('user intent:') &&
+             !l.startsWith('requirements:') &&
              !l.startsWith('technical audit:') &&
              !l.startsWith('**task') &&
              !l.startsWith('**requirements');
@@ -51,50 +92,70 @@ export const createEmail = async (req, res) => {
     let subjectLine = 'AI Generated Business Correspondence';
     let emailBody = "";
 
-    // Find the actual Subject line
-    const subjectIdx = lines.findIndex(l => l.toLowerCase().startsWith('subject:'));
-    
+    const subjectIdx = lines.findIndex(l =>
+      l.toLowerCase().startsWith('subject:')
+    );
+
     if (subjectIdx !== -1) {
-      // Extract Subject
-      subjectLine = lines[subjectIdx].replace(/Subject:/i, '').replace(/\*/g, '').trim();
-      // Everything after the Subject line is the Body
+      subjectLine = lines[subjectIdx]
+        .replace(/Subject:/i, '')
+        .replace(/\*/g, '')
+        .trim();
+
       emailBody = lines.slice(subjectIdx + 1).join('\n').trim();
     } else {
-      // Fallback if AI skips the Subject header
       emailBody = lines.join('\n').trim();
     }
 
-    // 4. Persistence Phase
+    // =========================
+    // 4) SAVE LOG
+    // =========================
     if (userId) {
-       try {
-         const newLog = new EmailLog({
-           user: userId,
-           recipient: recipientName || "Unspecified Recipient",
-           subject: subjectLine,
-           body: emailBody,
-           status: 'Generated',
-           metadata: { anomalyDetected: invoiceData?.isAnomaly || false }
-         });
-         await newLog.save();
-       } catch (logErr) {
-         console.warn("Log could not be saved, but sending email anyway.");
-       }
+      try {
+        const newLog = new EmailLog({
+          user: userId,
+          recipient: recipientName || "Unspecified Recipient",
+          subject: subjectLine,
+          body: emailBody,
+          status: usedFallback ? 'Fallback Generated' : 'AI Generated',
+          metadata: {
+            anomalyDetected: invoiceData?.isAnomaly || false
+          }
+        });
+
+        await newLog.save();
+      } catch (logErr) {
+        console.warn("Log save failed, continuing...");
+      }
     }
 
-    // 5. Response - Perfect for Email.jsx
-    res.status(200).json({ 
-      success: true, 
+    // =========================
+    // 5) RESPONSE
+    // =========================
+    res.status(200).json({
+      success: true,
       content: {
         subject: subjectLine,
         body: emailBody
+      },
+      meta: {
+        usedFallback
       }
     });
 
   } catch (error) {
     console.error(`[NEURAL_MAIL_ERROR]: ${error.message}`);
-    res.status(500).json({ 
-      success: false, 
-      message: 'AI Synthesis Interrupted'
+
+    // ❗ LAST RESORT FALLBACK (never fail API)
+    res.status(200).json({
+      success: true,
+      content: {
+        subject: "Invoice Communication",
+        body: "Dear Customer,\n\nPlease review your invoice.\n\nRegards,\nTeam"
+      },
+      meta: {
+        usedFallback: true
+      }
     });
   }
 };

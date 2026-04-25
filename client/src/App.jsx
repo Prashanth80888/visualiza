@@ -5,6 +5,9 @@ import DashboardLayout from './layouts/DashboardLayout';
 // Intelligence Components
 import VoiceIntelligence from './pages/VoiceIntelligence'; // 1. IMPORT MIC HERE
 
+// --- NEW COMPONENT IMPORT ---
+import NegotiationWarRoom from './components/NegotiationWarRoom'; 
+
 // Auth Pages
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
@@ -88,6 +91,10 @@ function App() {
           <Route path="invoices" element={<Invoices />} />
           <Route path="records" element={<Records />} />
           <Route path="analytics" element={<Analytics />} />
+          
+          {/* --- NEGOTIATION ROUTE ADDED HERE --- */}
+          <Route path="negotiation" element={<NegotiationWarRoom vendorName="IMPORTING COMPANY" />} />
+
           <Route path="chatbot" element={<Chatbot />} />
           <Route path="email" element={<Email />} />
         </Route>

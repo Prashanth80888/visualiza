@@ -9,6 +9,7 @@ import analyticsRoutes from './routes/analyticsRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import ocrRoutes from './routes/ocrRoutes.js';
 import agentRoutes from './routes/agentRoutes.js';
+import negotiationRoutes from './routes/negotiationRoutes.js';
 // Load env vars
 dotenv.config();
 
@@ -29,6 +30,7 @@ app.use('/api/v1/chat', chatRoutes); // ✅ ADD HERE (BEFORE listen)
 app.use('/api/v1/analytics', analyticsRoutes);
 app.use('/api/v1/ocr', ocrRoutes); // This creates the /api/v1/ocr/scan path
 app.use('/api/v1/agent', agentRoutes); // ✅ ADD HERE (BEFORE listen) 
+app.use('/api/negotiation', negotiationRoutes);
 // Test Route (optional but useful)
 app.get('/', (req, res) => {
   res.send('API Running...');

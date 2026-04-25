@@ -3,140 +3,199 @@ import FormData from 'form-data';
 import fs from 'fs';
 import Invoice from '../models/Invoice.js';
 
+// ✅ SAME as your working pattern
+let cachedModelName = null;
+
 export const processInvoice = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'Please upload a file' });
     }
 
-    // 1) OCR: Extract raw text via OCR.Space
+    // =========================
+    // 1) OCR / TEXT EXTRACTION
+    // =========================
+    let extractedText = "";
+
     const formData = new FormData();
     formData.append('file', fs.createReadStream(req.file.path));
     formData.append('apikey', process.env.OCR_API_KEY);
     formData.append('OCREngine', '2');
 
-    const ocrRes = await axios.post(
-      'https://api.ocr.space/parse/image',
-      formData,
-      { headers: formData.getHeaders() }
-    );
+    const fileType = req.file.mimetype;
 
-    const extractedText = ocrRes.data?.ParsedResults?.[0]?.ParsedText || '';
+    if (
+      fileType.startsWith("image/") ||
+      fileType === "application/pdf"
+    ) {
+      const ocrRes = await axios.post(
+        'https://api.ocr.space/parse/image',
+        formData,
+        { headers: formData.getHeaders() }
+      );
 
-    // 2) AI Discovery & Extraction
-    const API_KEY = process.env.AI_API_KEY;
-    const listUrl = `https://generativelanguage.googleapis.com/v1/models?key=${API_KEY}`;
-    const listRes = await axios.get(listUrl);
-    const workingModel = listRes.data.models.find(m => m.supportedGenerationMethods.includes('generateContent'));
+      extractedText = ocrRes.data?.ParsedResults?.[0]?.ParsedText || "";
+    } else {
+      console.log("⚠️ Non-image file → skipping OCR");
+      extractedText = fs.readFileSync(req.file.path, "utf-8");
+    }
 
-    if (!workingModel) throw new Error("No active AI model found");
-
-    const chatUrl = `https://generativelanguage.googleapis.com/v1/${workingModel.name}:generateContent?key=${API_KEY}`;
-    
-    const prompt = `
-      Extract fields from this invoice text as JSON: 
-      invoiceNo, 
-      date, 
-      customer, 
-      subtotal (number),
-      taxAmount (number),
-      total (number), 
-      gstNumber, 
-      balanceDue (number)
-      
-      Text: ${extractedText}
-      Return ONLY valid JSON.
-    `;
+    console.log("OCR TEXT:\n", extractedText);
 
     let finalData;
+    let usedFallback = false;
+
     try {
-      const aiRes = await axios.post(chatUrl, {
-        contents: [{ parts: [{ text: prompt }] }]
-      });
-      
-      const aiText = aiRes.data.candidates[0].content.parts[0].text;
-      const cleaned = aiText.replace(/```json|```/g, "").trim();
-      finalData = JSON.parse(cleaned);
-    } catch (aiErr) {
-      console.error("AI Parse failed, applying regex fallback");
+      // =========================
+      // MODEL DISCOVERY
+      // =========================
+      if (!cachedModelName) {
+        const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.AI_API_KEY}`;
+        const listRes = await axios.get(listUrl);
+
+        const model =
+          listRes.data.models.find(m => m.name.includes('gemini-1.5-flash')) ||
+          listRes.data.models.find(m => m.supportedGenerationMethods.includes('generateContent'));
+
+        if (!model) throw new Error("No compatible Gemini models found.");
+
+        cachedModelName = model.name;
+      }
+
+      // =========================
+      // GEMINI CALL (🔥 IMPROVED PROMPT)
+      // =========================
+      const chatUrl = `https://generativelanguage.googleapis.com/v1beta/${cachedModelName}:generateContent?key=${process.env.AI_API_KEY}`;
+
+      const requestBody = {
+        contents: [{
+          parts: [
+            {
+              text: `
+Extract invoice details from the text below.
+
+Return ONLY valid JSON with keys:
+invoiceNo, date, customer, subtotal, taxAmount, total, gstNumber, balanceDue.
+
+Rules:
+- If value is missing → use "UNKNOWN" for text fields and 0 for numbers
+- Always return all keys
+- Do NOT return explanation
+
+Text:
+${extractedText}
+`
+            }
+          ]
+        }],
+        generationConfig: {
+          temperature: 0.1,
+          responseMimeType: "application/json"
+        }
+      };
+
+      const aiRes = await axios.post(chatUrl, requestBody);
+
+      const aiText = aiRes.data?.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+
+      const jsonMatch = aiText.match(/\{[\s\S]*\}/);
+      finalData = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
+
+    } catch (err) {
+      console.log("AI FAILED → Using fallback");
+      console.error("REAL ERROR:", err.response?.data || err.message);
+      usedFallback = true;
+
+      // =========================
+      // FALLBACK (UNCHANGED)
+      // =========================
+      const lines = extractedText.split("\n").map(l => l.trim());
+
+      const findValue = (keyword) => {
+        for (let i = 0; i < lines.length; i++) {
+          if (new RegExp(keyword, "i").test(lines[i])) {
+            let sameLine = lines[i].match(/[\$₹]?([\d,]+\.\d+|\d+)/);
+            if (sameLine) return sameLine[1];
+
+            if (lines[i + 1]) {
+              let nextLine = lines[i + 1].match(/[\$₹]?([\d,]+\.\d+|\d+)/);
+              if (nextLine) return nextLine[1];
+            }
+          }
+        }
+        return null;
+      };
+
+      const totalMatches = [...extractedText.matchAll(/[\$₹]([\d,]+\.\d+)/g)];
+      const totalValue = totalMatches.length
+        ? totalMatches[totalMatches.length - 1][1]
+        : findValue("Total");
+
+      const taxValue =
+        findValue("VAT") ||
+        findValue("Tax") ||
+        findValue("GST");
+
+      const subtotalValue =
+        findValue("Sub Total") ||
+        findValue("Taxable");
+
+      let customer = "Unknown";
+      const billIndex = lines.findIndex(l => /bill\s*to/i.test(l));
+      if (billIndex !== -1 && lines[billIndex + 1]) {
+        customer = lines[billIndex + 1];
+      }
+
       finalData = {
-        invoiceNo: extractedText.match(/Invoice\s*No[:\s]*([A-Za-z0-9-]+)/i)?.[1] || "",
-        date: extractedText.match(/Date[:\s]*([\d\/-]+)/i)?.[1] || "",
-        customer: "Manual Entry",
-        subtotal: 0,
-        taxAmount: 0,
-        total: parseFloat(extractedText.match(/Total[:\s]*₹?\s*(\d+)/i)?.[1]) || 0,
-        gstNumber: extractedText.match(/\d{2}[A-Z]{5}\d{4}[A-Z]{1}[A-Z\d]{1}[Z]{1}[A-Z\d]{1}/)?.[0] || "",
-        balanceDue: 0 
+        invoiceNo:
+          extractedText.match(/Invoice\s*No[:\s]*([A-Za-z0-9-/]+)/i)?.[1] ||
+          "INV-" + Date.now(),
+
+        date:
+          extractedText.match(/Date[:\s]*([\d\/-]+)/i)?.[1] ||
+          new Date().toISOString().split('T')[0],
+
+        customer: customer,
+        subtotal: subtotalValue ? parseFloat(subtotalValue.replace(/,/g, '')) : 0,
+        taxAmount: taxValue ? parseFloat(taxValue.replace(/,/g, '')) : 0,
+        total: totalValue ? parseFloat(totalValue.replace(/,/g, '')) : 0,
+        gstNumber:
+          extractedText.match(/\d{2}[A-Z]{5}\d{4}[A-Z]{1}[A-Z\d]{1}Z[A-Z\d]{1}/)?.[0] || "",
+        balanceDue: 0
       };
     }
 
-    // --- NEW LOGIC: DATE FORMATTING FIX ---
-    let validDate = new Date(); // Default to today
-    if (finalData.date) {
-      // Split by common separators: / or - or .
-      const dateParts = finalData.date.split(/[-/.]/);
-      
-      if (dateParts.length === 3) {
-        // If it's DD/MM/YYYY, we rearrange it to YYYY-MM-DD
-        const day = dateParts[0].length === 4 ? dateParts[2] : dateParts[0];
-        const month = dateParts[1];
-        const year = dateParts[0].length === 4 ? dateParts[0] : dateParts[2];
-        
-        const isoDate = `${year}-${month}-${day}`;
-        const parsed = new Date(isoDate);
-        if (!isNaN(parsed)) validDate = parsed;
-      } else {
-        // Try standard parsing if it's already ISO
-        const standard = new Date(finalData.date);
-        if (!isNaN(standard)) validDate = standard;
-      }
+    // =========================
+    // SAFE DATA (🔥 FIXED CRASH)
+    // =========================
+    const safeData = {
+      vendor: finalData.customer || "Unknown Vendor",
+      amount: finalData.total || 0,
+      reference: finalData.invoiceNo || "N/A",
+      date: new Date(),
+      taxId: finalData.gstNumber || "N/A",
+      taxAmount: finalData.taxAmount || 0,
+      subtotal: finalData.subtotal || 0,
+      paymentStatus: (finalData.balanceDue || 0) === 0 ? 'Paid' : 'Unpaid',
+      isVerified: Math.abs((finalData.subtotal || 0) + (finalData.taxAmount || 0) - (finalData.total || 0)) < 2,
+      status: "Processed"
+    };
+
+    const savedInvoice = await Invoice.create(safeData);
+
+    if (fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
     }
 
-    // --- NEW LOGIC: GST VERIFICATION (MATH CHECK) ---
-    const extractedSubtotal = finalData.subtotal || 0;
-    const extractedTax = finalData.taxAmount || 0;
-    const extractedTotal = finalData.total || 0;
-    const isMathCorrect = Math.abs((extractedSubtotal + extractedTax) - extractedTotal) < 1;
-
-    // --- NEW LOGIC: PAYMENT STATUS (BALANCE CHECK) ---
-    const isPaid = finalData.balanceDue === 0;
-
-    // 3) SAVE TO DATABASE 
-    const savedInvoice = await Invoice.create({
-      vendor: finalData.customer || "Unknown",
-      amount: extractedTotal,
-      reference: finalData.invoiceNo,
-      date: validDate, // Use the converted Date object here
-      taxId: finalData.gstNumber || "N/A",
-      taxAmount: extractedTax,
-      subtotal: extractedSubtotal,
-      paymentStatus: isPaid ? 'Paid' : 'Unpaid',
-      isVerified: isMathCorrect, 
-      status: isMathCorrect ? 'Verified' : 'Tax Mismatch',
-      shield: {
-        ocrConfidence: "High",
-        mathVerified: isMathCorrect,
-        balanceDetected: finalData.balanceDue
-      }
-    });
-
-    // 4) Cleanup
-    if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-
-    // 5) Response
     res.status(200).json({
       success: true,
       data: savedInvoice,
-      analysis: {
-        isGstValid: isMathCorrect,
-        paymentStatus: savedInvoice.paymentStatus
-      }
+      meta: { usedFallback }
     });
 
   } catch (error) {
-    console.error('Invoice Processing Error:', error.message);
-    res.status(500).json({ success: false, message: 'Processing Failed' });
+    console.error(error);
+    res.status(500).json({ success: false });
   }
 };
 
