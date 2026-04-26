@@ -34,7 +34,7 @@ export default function Scanner() {
       formData.append('invoice', selectedFile);
 
       try {
-        const response = await axios.post('http://13.232.1.72:5000/api/v1/ocr/scan', formData);
+        const response = await axios.post('/api/v1/ocr/scan', formData);
         const aiResult = response.data;
 
         // Artificial delay for dramatic effect (let the logs play out)

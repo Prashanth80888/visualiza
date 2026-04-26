@@ -16,7 +16,7 @@ export default function Chatbot() {
     const initializeAgent = async () => {
       setLoading(true);
       try {
-        const { data } = await axios.post('http://13.232.1.72:5000/api/v1/agent/resolve', {
+        const { data } = await axios.post('/api/v1/agent/resolve', {
           message: "hello" 
         });
         setMessages([{ role: 'model', text: data.reply }]);
@@ -49,7 +49,7 @@ export default function Chatbot() {
     setLoading(true);
 
     try {
-      const { data } = await axios.post('http://13.232.1.72:5000/api/v1/agent/resolve', {
+      const { data } = await axios.post('/api/v1/agent/resolve', {
         message: textToSend
       });
 

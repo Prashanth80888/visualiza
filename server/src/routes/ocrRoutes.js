@@ -7,7 +7,7 @@ import multer from 'multer';
 const router = express.Router();
 const upload = multer(); // Memory storage for fast AI processing
 
-// This makes the full URL: http://13.232.1.72:5000/api/v1/ocr/scan
+// This makes the full URL: /api/v1/ocr/scan
 router.post('/scan', upload.single('invoice'), scanInvoice);
 router.post('/send-audit-mail', sendAutomatedEmail);
 

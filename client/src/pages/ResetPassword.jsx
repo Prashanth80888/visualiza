@@ -20,7 +20,7 @@ export default function ResetPassword() {
 
     setStatus('loading');
     try {
-      await axios.put(`http://13.232.1.72:5000/api/v1/auth/reset-password/${token}`, { password });
+      await axios.put(`/api/v1/auth/reset-password/${token}`, { password });
       setStatus('success');
       setTimeout(() => navigate('/login'), 3000);
     } catch (err) {
