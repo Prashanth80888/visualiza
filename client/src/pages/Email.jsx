@@ -16,7 +16,7 @@ export default function Email() {
     try {
       // FIX: Changed 'email/create' to 'emails/generate' to match standard plurals
       // Ensure your backend emailRoutes.js has router.post('/generate', ...)
-      const { data } = await axios.post('http://localhost:5000/api/v1/emails/generate', {
+      const { data } = await axios.post('http://13.232.1.72:5000/api/v1/emails/generate', {
         prompt: type,
         contextText: context,
         invoiceData: { isAnomaly: context.toLowerCase().includes('increase') || context.toLowerCase().includes('high') }

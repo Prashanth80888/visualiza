@@ -16,7 +16,7 @@ export default function VerifyEmail() {
 
     const verify = async () => {
       try {
-        await axios.get(`http://localhost:5000/api/v1/auth/verify/${token}`);
+        await axios.get(`http://13.232.1.72:5000/api/v1/auth/verify/${token}`);
         setStatus('success');
         setTimeout(() => navigate('/login'), 3500);
       } catch (err) {

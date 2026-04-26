@@ -19,7 +19,7 @@ export default function Records() {
     setLoading(true);
     try {
       // Build query string based on filters
-      let url = `http://localhost:5000/api/v1/invoices?search=${searchTerm}`;
+      let url = `http://13.232.1.72:5000/api/v1/invoices?search=${searchTerm}`;
       if (activeTab !== 'All') url += `&status=${activeTab}`;
       if (selectedDate) {
         url += `&startDate=${selectedDate}&endDate=${selectedDate}`;
@@ -42,7 +42,7 @@ export default function Records() {
   const handleUpdateStatus = async (id, currentStatus) => {
     const newStatus = currentStatus === 'Paid' ? 'Unpaid' : 'Paid';
     try {
-      await axios.patch(`http://localhost:5000/api/v1/invoices/${id}/status`, {
+      await axios.patch(`http://13.232.1.72:5000/api/v1/invoices/${id}/status`, {
         paymentStatus: newStatus
       });
       fetchInvoices(); // Refresh list
@@ -53,7 +53,7 @@ export default function Records() {
 
   const handleDelete = async (id) => {
     if(window.confirm("Delete this record permanently?")) {
-      await axios.delete(`http://localhost:5000/api/v1/invoices/${id}`);
+      await axios.delete(`http://13.232.1.72:5000/api/v1/invoices/${id}`);
       fetchInvoices();
     }
   };

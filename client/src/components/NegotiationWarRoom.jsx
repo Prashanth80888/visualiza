@@ -15,7 +15,7 @@ const NegotiationWarRoom = () => {
   useEffect(() => {
     const fetchVendors = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/negotiation/vendors');
+        const res = await fetch('http://13.232.1.72:5000/api/negotiation/vendors');
         if (!res.ok) throw new Error('Failed to fetch vendors');
         const list = await res.json();
         setVendors(list);
@@ -33,7 +33,7 @@ const NegotiationWarRoom = () => {
     setLoading(true);
     
     // Using encodeURIComponent to handle special characters like ":" and "/"
-    fetch(`http://localhost:5000/api/negotiation/leverage/${encodeURIComponent(selectedVendor)}`)
+    fetch(`http://13.232.1.72:5000/api/negotiation/leverage/${encodeURIComponent(selectedVendor)}`)
       .then(res => {
         if (!res.ok) throw new Error(`Server error: ${res.status}`);
         return res.json();
@@ -53,7 +53,7 @@ const NegotiationWarRoom = () => {
   const handleInitiateProtocol = async () => {
     setIsNegotiating(true);
     try {
-      const response = await fetch('http://localhost:5000/api/negotiation/generate-strategy', {
+      const response = await fetch('http://13.232.1.72:5000/api/negotiation/generate-strategy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 

@@ -49,9 +49,9 @@ export default function Analytics() {
   const fetchStats = async () => {
     try {
       const [statsRes, forecastRes, insightRes] = await Promise.all([
-        axios.get('http://localhost:5000/api/v1/analytics/stats'),
-        axios.get('http://localhost:5000/api/v1/analytics/forecast'),
-        axios.get('http://localhost:5000/api/v1/analytics/insight-x')
+        axios.get('http://13.232.1.72:5000/api/v1/analytics/stats'),
+        axios.get('http://13.232.1.72:5000/api/v1/analytics/forecast'),
+        axios.get('http://13.232.1.72:5000/api/v1/analytics/insight-x')
       ]);
       
       const historyData = statsRes.data.chartData.map(item => ({

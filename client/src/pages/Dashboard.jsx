@@ -64,10 +64,10 @@ export default function OmniDashboard() {
         const headers = { Authorization: `Bearer ${token}` };
 
         const [invRes, statsRes, forecastRes, insightRes] = await Promise.all([
-          axios.get('http://localhost:5000/api/v1/invoices', { headers }),
-          axios.get('http://localhost:5000/api/v1/analytics/stats', { headers }),
-          axios.get('http://localhost:5000/api/v1/analytics/forecast', { headers }),
-          axios.get('http://localhost:5000/api/v1/analytics/insight-x', { headers })
+          axios.get('http://13.232.1.72:5000/api/v1/invoices', { headers }),
+          axios.get('http://13.232.1.72:5000/api/v1/analytics/stats', { headers }),
+          axios.get('http://13.232.1.72:5000/api/v1/analytics/forecast', { headers }),
+          axios.get('http://13.232.1.72:5000/api/v1/analytics/insight-x', { headers })
         ]);
 
         const invoices = invRes.data.data || [];

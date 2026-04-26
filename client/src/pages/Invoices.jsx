@@ -21,7 +21,7 @@ export default function Invoices() {
 
     try {
       const { data } = await axios.post(
-        'http://localhost:5000/api/v1/invoices/upload',
+        'http://13.232.1.72:5000/api/v1/invoices/upload',
         formData
       );
       setResult(data);

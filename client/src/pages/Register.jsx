@@ -17,7 +17,7 @@ export default function Register() {
     setLoading(true);
     setError('');
     try {
-      await axios.post('http://localhost:5000/api/v1/auth/register', formData);
+      await axios.post('http://13.232.1.72:5000/api/v1/auth/register', formData);
       setStep(2);
     } catch (err) {
       setError(err.response?.data?.message || "Registration failed");
@@ -31,7 +31,7 @@ export default function Register() {
     setLoading(true);
     setError('');
     try {
-      await axios.post('http://localhost:5000/api/v1/auth/verify-otp', { 
+      await axios.post('http://13.232.1.72:5000/api/v1/auth/verify-otp', { 
         email: formData.email, 
         otp 
       });
